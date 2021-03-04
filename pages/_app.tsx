@@ -1,3 +1,4 @@
+import '../lib/firebase'
 import '../styles/globals.css'
 
 function MyApp({ Component, pageProps }) {
