@@ -3,8 +3,10 @@
 
 教材出典：[Next.jsとFirebaseで質問箱のようなサービスを作る](https://zenn.dev/dala/books/nextjs-firebase-service)
 
+※メモは TIL の方にコミット
+
 ## 環境
-- TypeScript：
+- TypeScript：4.2.2
 - Node.js：14.2.0
 - Next.js：10.0.7
 
