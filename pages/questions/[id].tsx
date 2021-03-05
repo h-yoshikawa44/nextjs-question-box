@@ -57,6 +57,10 @@ export default function QuestionsShow() {
   }
 
   useEffect(() => {
+    if (user === null) {
+      return
+    }
+
     loadData()
   }, [query.id])
 
