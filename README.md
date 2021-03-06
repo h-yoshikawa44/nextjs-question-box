@@ -16,6 +16,11 @@
 $ yarn install
 ```
 
+.env.local を作成して、必要な環境変数を設定（初回）
+```
+cp .env.example .env.local
+```
+
 Next.js サーバ立ち上げ
 ```
 $ yarn dev
