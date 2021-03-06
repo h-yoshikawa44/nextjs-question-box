@@ -2,6 +2,7 @@ import { FormEvent, useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
 import firebase from 'firebase/app'
 import Layout from '../../components/Layout'
+import TwitterShareButton from '../../components/TwitterShareButton'
 import { Question } from '../../models/Question'
 import { Answer } from '../../models/Answer'
 import { useAuthentication } from '../../hooks/authentication'
@@ -68,9 +69,11 @@ export default function QuestionsShow() {
     e.preventDefault()
     setIsSending(true)
 
+    const answerRef = firebase.firestore().collection('answers').doc()
+
     // 複数の更新処理を行うので、整合性確保のためにトランザクションを使う
     await firebase.firestore().runTransaction(async (t) => {
-      t.set(firebase.firestore().collection('answers').doc(), {
+      t.set(answerRef, {
         uid: user.uid,
         questionId: question.id,
         body,
@@ -83,7 +86,7 @@ export default function QuestionsShow() {
 
     const now = new Date().getTime()
     setAnswer({
-      id: '',
+      id: answerRef.id,
       uid: user.uid,
       questionId: question.id,
       body,
@@ -128,9 +131,18 @@ export default function QuestionsShow() {
                     </div>
                   </form>
                 ) : (
-                  <div className="card">
-                    <div className="card-body text-left">{answer.body}</div>
-                  </div>
+                  <>
+                    <div className="card">
+                      <div className="card-body text-left">{answer.body}</div>
+                    </div>
+
+                    <div className="my-3 d-flex justify-content-center">
+                    <TwitterShareButton
+                      url={`${process.env.NEXT_PUBLIC_WEB_URL}/answers/${answer.id}`}
+                      text={answer.body}
+                    ></TwitterShareButton>
+                    </div>
+                  </>
                 )}
               </section>
             </>

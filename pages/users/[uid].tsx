@@ -76,7 +76,7 @@ export default function UserShow() {
       )}
       <div className="row justify-content-center mb-3">
         <div className="col-12 col-md-6">
-        {user.uid === firebase.auth().currentUser.uid ? (
+        {user && user.uid === firebase.auth().currentUser.uid ? (
           <div>自分には送信できません。</div>
          ) : (
           <form onSubmit={onSubmit}>
