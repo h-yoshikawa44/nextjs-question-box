@@ -1,4 +1,5 @@
 import { useRouter } from 'next/router'
+import Link from 'next/link'
 import { FormEvent, useEffect, useState } from 'react'
 import firebase from 'firebase/app'
 import { toast } from 'react-toastify';
@@ -76,30 +77,39 @@ export default function UserShow() {
       )}
       <div className="row justify-content-center mb-3">
         <div className="col-12 col-md-6">
-        {user && user.uid === firebase.auth().currentUser.uid ? (
-          <div>自分には送信できません。</div>
-         ) : (
-          <form onSubmit={onSubmit}>
-            <textarea
-              className="form-control"
-              placeholder="おげんきですか？"
-              rows={6}
-              onChange={(e) => setBody(e.target.value)}
-              required
-            ></textarea>
-            <div className="m-3">
-              {isSending ? (
-                <div className="spinner-border text-secondary" role="status">
-                  <span className="visually-hidden">Loading...</span>
-                </div>
-              ) : (
-                <button type="submit" className="btn btn-primary">
-                  質問を送信する
-                </button>
-              )}
-            </div>
-          </form>
-         )}
+          {user && user.uid === firebase.auth().currentUser.uid ? (
+            <div className="text-center">自分には送信できません。</div>
+          ) : (
+            <form onSubmit={onSubmit}>
+              <textarea
+                className="form-control"
+                placeholder="おげんきですか？"
+                rows={6}
+                onChange={(e) => setBody(e.target.value)}
+                required
+              ></textarea>
+              <div className="m-3">
+                {isSending ? (
+                  <div className="spinner-border text-secondary" role="status">
+                    <span className="visually-hidden">Loading...</span>
+                  </div>
+                ) : (
+                  <button type="submit" className="btn btn-primary">
+                    質問を送信する
+                  </button>
+                )}
+              </div>
+            </form>
+          )}
+          <div>
+            {user && (
+              <p className="text-center">
+                <Link href="/users/me">
+                  <a className="btn btn-link">自分もみんなに質問してもらおう！</a>
+                </Link>
+              </p>
+            )}
+          </div>
         </div>
       </div>
     </Layout>
