@@ -1,4 +1,5 @@
 import Head from 'next/head'
+import Link from 'next/link'
 import Layout from '../../../components/Layout'
 import TwitterShareButton from '../../../components/TwitterShareButton'
 import { Answer } from '../../../models/Answer'
@@ -54,6 +55,13 @@ export default function AnswersShow(props: Props) {
                 url={`${process.env.NEXT_PUBLIC_WEB_URL}/answers/${props.answer.id}`}
                 text={props.answer.body}
               ></TwitterShareButton>
+            </div>
+            <div className="d-flex justify-content-center">
+              <p>
+                <Link href="/users/me">
+                  <a className="btn btn-link">自分もみんなに質問してもらおう！</a>
+                </Link>
+              </p>
             </div>
           </>
         </div>
