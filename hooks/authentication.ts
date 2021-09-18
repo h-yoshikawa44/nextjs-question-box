@@ -1,7 +1,14 @@
 import { useEffect } from 'react'
-import firebase from 'firebase/app'
-import { User } from '../models/User'
+import { getAuth, onAuthStateChanged, signInAnonymously } from 'firebase/auth'
+import {
+  getFirestore,
+  collection,
+  doc,
+  getDoc,
+  setDoc,
+} from 'firebase/firestore'
 import { atom, useRecoilState } from 'recoil'
+import { User } from '../models/User'
 
 const userState = atom<User>({
   key: 'user',
@@ -9,42 +16,41 @@ const userState = atom<User>({
 })
 
 async function createUserIfNotFound(user: User) {
-  const userRef = firebase.firestore().collection('users').doc(user.uid)
-  const doc = await userRef.get()
-  if (doc.exists) {
+  const db = getFirestore()
+  const usersCollection = collection(db, 'users')
+  const userRef = doc(usersCollection, user.uid)
+  const document = await getDoc(userRef)
+  if (document.exists()) {
     // 書き込みの方が高いので！
     return
   }
 
-  await userRef.set({
+  await setDoc(userRef, {
     name: 'taro' + new Date().getTime(),
   })
 }
 
-export function useAuthentication() {
+function useAuthentication() {
   const [user, setUser] = useRecoilState(userState)
 
   useEffect(() => {
     if (user !== null) {
       return
     }
+    const auth = getAuth()
 
-    console.log('Start useEffect')
+    signInAnonymously(auth).catch(function (error) {
+      // Handle Errors here.
+      console.error(error)
+      // ...
+    })
 
-    firebase
-      .auth()
-      .signInAnonymously()
-      .catch(function (error) {
-        // Handle Errors here.
-        console.error(error)
-      })
-
-    firebase.auth().onAuthStateChanged(function (firebaseUser) {
+    onAuthStateChanged(auth, function (firebaseUser) {
       if (firebaseUser) {
         const loginUser: User = {
           uid: firebaseUser.uid,
           isAnonymous: firebaseUser.isAnonymous,
-          name: '',
+          name: ''
         }
         setUser(loginUser)
         createUserIfNotFound(loginUser)
@@ -52,9 +58,11 @@ export function useAuthentication() {
         // User is signed out.
         setUser(null)
       }
+      // ...
     })
   }, [])
 
-
   return { user }
 }
+
+export { useAuthentication }

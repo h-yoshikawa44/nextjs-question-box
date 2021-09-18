@@ -1,6 +1,18 @@
-import { FormEvent, useEffect, useState } from 'react'
+import { FormEvent, useState, useEffect } from 'react'
 import { useRouter } from 'next/router'
-import firebase from 'firebase/app'
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  getFirestore,
+  limit,
+  query,
+  runTransaction,
+  serverTimestamp,
+  Timestamp,
+  where,
+} from 'firebase/firestore'
 import Layout from '../../components/Layout'
 import TwitterShareButton from '../../components/TwitterShareButton'
 import { Question } from '../../models/Question'
@@ -13,24 +25,30 @@ type Query = {
 
 export default function QuestionsShow() {
   const router = useRouter()
-  const query = router.query as Query
+  const routerQuery = router.query as Query
   const { user } = useAuthentication()
   const [question, setQuestion] = useState<Question>(null)
   const [answer, setAnswer] = useState<Answer>(null)
   const [body, setBody] = useState('')
   const [isSending, setIsSending] = useState(false)
 
+  function getCollections() {
+    const db = getFirestore()
+    return {
+      db,
+      questionsCollection: collection(db, 'questions'),
+      answersCollection: collection(db, 'answers'),
+    }
+  }
+
   async function loadData() {
-    if (query.id === undefined) {
+    if (routerQuery.id === undefined) {
       return
     }
 
-    const questionDoc = await firebase
-      .firestore()
-      .collection('questions')
-      .doc(query.id)
-      .get()
-    if (!questionDoc.exists) {
+    const { questionsCollection, answersCollection } = getCollections()
+    const questionDoc = await getDoc(doc(questionsCollection, routerQuery.id))
+    if (!questionDoc.exists()) {
       return
     }
 
@@ -42,12 +60,13 @@ export default function QuestionsShow() {
       return
     }
 
-    const answerSnapshot = await firebase
-      .firestore()
-      .collection('answers')
-      .where('questionId', '==', gotQuestion.id)
-      .limit(1)
-      .get()
+    const answerSnapshot = await getDocs(
+      query(
+        answersCollection,
+        where('questionId', '==', gotQuestion.id),
+        limit(1)
+      )
+    )
     if (answerSnapshot.empty) {
       return
     }
@@ -63,23 +82,24 @@ export default function QuestionsShow() {
     }
 
     loadData()
-  }, [query.id])
+  }, [routerQuery.id])
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setIsSending(true)
 
-    const answerRef = firebase.firestore().collection('answers').doc()
+    const { db, questionsCollection, answersCollection } = getCollections()
+    const answerRef = doc(answersCollection)
 
     // 複数の更新処理を行うので、整合性確保のためにトランザクションを使う
-    await firebase.firestore().runTransaction(async (t) => {
+    await runTransaction(db, async (t) => {
       t.set(answerRef, {
         uid: user.uid,
         questionId: question.id,
         body,
-        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        createdAt: serverTimestamp(),
       })
-      t.update(firebase.firestore().collection('questions').doc(question.id), {
+      t.update(doc(questionsCollection, question.id), {
         isReplied: true,
       })
     })
@@ -90,7 +110,7 @@ export default function QuestionsShow() {
       uid: user.uid,
       questionId: question.id,
       body,
-      createdAt: new firebase.firestore.Timestamp(now / 1000, now % 1000),
+      createdAt: new Timestamp(now / 1000, now % 1000),
     })
   }
 

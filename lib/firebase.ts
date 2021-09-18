@@ -1,9 +1,10 @@
-import firebase from 'firebase/app'
+import { initializeApp, getApps } from 'firebase/app'
+// import { getAnalytics } from 'firebase/analytics'
 // import 'firebase/analytics'
 import 'firebase/auth'
 import 'firebase/firestore'
 
-if (typeof window !== 'undefined' && firebase.apps.length === 0) {
+if (typeof window !== 'undefined' && getApps().length === 0) {
   const firebaseConfig = {
     apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
     authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
@@ -15,6 +16,7 @@ if (typeof window !== 'undefined' && firebase.apps.length === 0) {
     measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
   }
 
-  firebase.initializeApp(firebaseConfig)
+  initializeApp(firebaseConfig)
   // firebase.analytics()
+  // getAnalytics
 }

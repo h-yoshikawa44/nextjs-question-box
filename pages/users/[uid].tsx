@@ -1,10 +1,19 @@
+import { FormEvent, useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
 import Link from 'next/link'
-import { FormEvent, useEffect, useState } from 'react'
 import firebase from 'firebase/app'
+import {
+  addDoc,
+  collection,
+  doc,
+  getDoc,
+  getFirestore,
+  serverTimestamp,
+} from 'firebase/firestore'
 import { toast } from 'react-toastify';
 import Layout from '../../components/Layout'
 import { User } from '../../models/User'
+import { useAuthentication } from '../../hooks/authentication'
 
 type Query = {
   uid: string
@@ -12,6 +21,7 @@ type Query = {
 
 export default function UserShow() {
   const [user, setUser] = useState<User>(null)
+  const { user: currentUser } = useAuthentication()
   const [body, setBody] = useState('')
   const [isSending, setIsSending] = useState(false)
   const router = useRouter()
@@ -23,18 +33,16 @@ export default function UserShow() {
       return
     }
     async function loadUser() {
-      const doc = await firebase
-        .firestore()
-        .collection('users')
-        .doc(query.uid)
-        .get()
+      const db = getFirestore()
+      const ref = doc(collection(db, 'users'), query.uid)
+      const userDoc = await getDoc(ref)
 
-      if (!doc.exists) {
+      if (!userDoc.exists()) {
         return
       }
 
-      const gotUser = doc.data() as User
-      gotUser.uid = doc.id
+      const gotUser = userDoc.data() as User
+      gotUser.uid = userDoc.id
       setUser(gotUser)
     }
     loadUser()
@@ -43,14 +51,16 @@ export default function UserShow() {
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
 
+    const db = getFirestore()
+
     setIsSending(true)
 
-    await firebase.firestore().collection('questions').add({
-      senderUid: firebase.auth().currentUser.uid,
+    await addDoc(collection(db, 'questions'), {
+      senderUid: currentUser.uid,
       receiverUid: user.uid,
       body,
       isReplied: false,
-      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      createdAt: serverTimestamp(),
     })
 
     setIsSending(false)
@@ -69,7 +79,7 @@ export default function UserShow() {
 
   return (
     <Layout>
-      {user && firebase.auth().currentUser && (
+      {user && currentUser && (
         <div className="text-center">
           <h1 className="h4">{user.name}さんのページ</h1>
           <div className="m-5">{user.name}さんに質問しよう！</div>
@@ -77,7 +87,7 @@ export default function UserShow() {
       )}
       <div className="row justify-content-center mb-3">
         <div className="col-12 col-md-6">
-          {user && user.uid === firebase.auth().currentUser.uid ? (
+          {user && user.uid === currentUser.uid ? (
             <div className="text-center">自分には送信できません。</div>
           ) : (
             <form onSubmit={onSubmit}>
@@ -85,6 +95,7 @@ export default function UserShow() {
                 className="form-control"
                 placeholder="おげんきですか？"
                 rows={6}
+                value={body}
                 onChange={(e) => setBody(e.target.value)}
                 required
               ></textarea>

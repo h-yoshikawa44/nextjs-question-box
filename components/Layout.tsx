@@ -48,7 +48,6 @@ export default function Layout({ children }) {
           </a>
         </div>
       </footer>
-      <ToastContainer />
       <nav className="navbar fixed-bottom navbar-light bg-light">
         <div className="container">
           <div className="d-flex justify-content-between align-items-center w-100">
@@ -66,6 +65,7 @@ export default function Layout({ children }) {
           </div>
         </div>
       </nav>
+      <ToastContainer />
     </div>
   )
 }

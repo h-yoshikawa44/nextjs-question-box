@@ -1,10 +1,21 @@
-import { useEffect, useRef, useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
-import firebase from 'firebase/app'
+import {
+  collection,
+  DocumentData,
+  getDocs,
+  getFirestore,
+  limit,
+  orderBy,
+  query,
+  QuerySnapshot,
+  startAfter,
+  where,
+} from 'firebase/firestore'
 import dayjs from 'dayjs'
-import { useAuthentication } from '../../hooks/authentication'
-import { Question } from '../../models/Question'
 import Layout from '../../components/Layout'
+import { Question } from '../../models/Question'
+import { useAuthentication } from '../../hooks/authentication'
 
 export default function QuestionsReceived() {
   const [questions, setQuestions] = useState<Question[]>([])
@@ -14,17 +25,16 @@ export default function QuestionsReceived() {
   const { user } = useAuthentication()
 
   function createBaseQuery() {
-    return firebase
-      .firestore()
-      .collection('questions')
-      .where('receiverUid', '==', user.uid)
-      .orderBy('createdAt', 'desc')
-      .limit(10)
+    const db = getFirestore()
+    return query(
+      collection(db, 'questions'),
+      where('receiverUid', '==', user.uid),
+      orderBy('createdAt', 'desc'),
+      limit(10)
+    )
   }
 
-  function appendQuestions(
-    snapshot: firebase.firestore.QuerySnapshot<firebase.firestore.DocumentData>
-  ) {
+  function appendQuestions(snapshot: QuerySnapshot<DocumentData>) {
     const gotQuestions = snapshot.docs.map((doc) => {
       const question = doc.data() as Question
       question.id = doc.id
@@ -34,7 +44,7 @@ export default function QuestionsReceived() {
   }
 
   async function loadQuestions() {
-    const snapshot = await createBaseQuery().get()
+    const snapshot = await getDocs(createBaseQuery())
 
     if (snapshot.empty) {
       setIsPaginationFinished(true)
@@ -51,9 +61,9 @@ export default function QuestionsReceived() {
     }
 
     const lastQuestion = questions[questions.length - 1]
-    const snapshot = await createBaseQuery()
-      .startAfter(lastQuestion.createdAt)
-      .get()
+    const snapshot = await getDocs(
+      query(createBaseQuery(), startAfter(lastQuestion.createdAt))
+    )
 
     if (snapshot.empty) {
       return

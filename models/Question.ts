@@ -1,4 +1,4 @@
-import firebase from 'firebase/app'
+import { Timestamp } from 'firebase/firestore'
 
 export interface Question {
   id: string
@@ -6,5 +6,5 @@ export interface Question {
   receiverUid: string
   body: string
   isReplied: boolean
-  createdAt: firebase.firestore.Timestamp
+  createdAt: Timestamp
 }

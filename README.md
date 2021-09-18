@@ -6,8 +6,8 @@
 ※メモは TIL の方にコミット
 
 ## 環境
-- TypeScript：4.2.2
-- Node.js：14.2.0
+- Node.js：14.17.3
+- TypeScript：4.4.3
 - Next.js：10.0.7
 
 ## 環境立ち上げ
